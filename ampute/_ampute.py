@@ -5,7 +5,7 @@ import numpy as np
 from scipy import sparse
 
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.utils import check_array, check_scalar
+from sklearn.utils import check_array, check_random_state, check_scalar
 
 
 class UnivariateAmputer(TransformerMixin, BaseEstimator):
@@ -44,11 +44,19 @@ class UnivariateAmputer(TransformerMixin, BaseEstimator):
         The indices of the features that have been amputated.
     """
 
-    def __init__(self, strategy="mcar", subset=None, ratio_missingness=0.5, copy=True):
+    def __init__(
+        self,
+        strategy="mcar",
+        subset=None,
+        ratio_missingness=0.5,
+        copy=True,
+        random_state=None,
+    ):
         self.strategy = strategy
         self.subset = subset
         self.ratio_missingness = ratio_missingness
         self.copy = copy
+        self.random_state = random_state
 
     def fit_transform(self, X, y=None):
         """Amputate the dataset `X` with missing values.
@@ -67,10 +75,18 @@ class UnivariateAmputer(TransformerMixin, BaseEstimator):
                 (n_samples, n_features)
             The dataset with missing values.
         """
+        is_dataframe = False
         if not (hasattr(X, "__array__") or sparse.issparse(X)):
-            X = check_array(X, force_all_finite="allow-nan", dtype=object)
+            X = check_array(
+                X, force_all_finite="allow-nan", copy=self.copy, dtype=object
+            )
+        elif hasattr(X, "loc"):
+            is_dataframe = True
 
-        n_features = X.shape[1]
+        if self.copy:
+            X = X.copy()
+
+        n_samples, n_features = X.shape
 
         supported_strategies = ["mcar"]
         if self.strategy not in supported_strategies:
@@ -89,6 +105,7 @@ class UnivariateAmputer(TransformerMixin, BaseEstimator):
                     )
                 try:
                     fx = feature_names.index(fx)
+                    return fx
                 except ValueError as e:
                     raise ValueError(
                         f"Feature '{fx}' is not a feature name in X."
@@ -101,7 +118,7 @@ class UnivariateAmputer(TransformerMixin, BaseEstimator):
                 )
 
         if self.subset is not None:
-            feature_names = X.columns.tolist() if hasattr(X, "columns") else None
+            feature_names = X.columns.tolist() if is_dataframe else None
             self.amputated_features_indices_ = np.array(
                 [
                     convert_feature(fx, feature_names=feature_names)
@@ -143,5 +160,19 @@ class UnivariateAmputer(TransformerMixin, BaseEstimator):
                 fill_value=self.ratio_missingness,
                 dtype=np.float64,
             )
+
+        random_state = check_random_state(self.random_state)
+
+        if self.strategy == "mcar":
+            for ratio, feature_idx in zip(
+                ratio_missingness, self.amputated_features_indices_
+            ):
+                mask_missing_values = random_state.choice(
+                    [False, True], size=n_samples, p=[1 - ratio, ratio]
+                )
+                if is_dataframe:
+                    X.iloc[mask_missing_values, feature_idx] = np.nan
+                else:
+                    X[mask_missing_values, feature_idx] = np.nan
 
         return X
