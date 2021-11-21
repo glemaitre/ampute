@@ -1,7 +1,7 @@
-from ._ampute import dummy
+from ._ampute import UnivariateAmputer
 from ._version import __version__
 
 __all__ = [
-    "dummy",
+    "UnivariateAmputer",
     "__version__",
 ]
