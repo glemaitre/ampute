@@ -8,7 +8,7 @@ from ampute import UnivariateAmputer
     "params, err_type, err_msg",
     [
         ({"strategy": "random"}, ValueError, "The strategy 'random' is not supported."),
-    ]
+    ],
 )
 def test_univariate_amputer_validation_parameters(params, err_type, err_msg):
     rng = np.random.RandomState(42)
