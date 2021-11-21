@@ -62,6 +62,9 @@ EXTRAS_REQUIRE = {
         "seaborn",
     ],
 }
+EXTRAS_REQUIRE["all"] = [
+    req for reqs in EXTRAS_REQUIRE.values() for req in reqs
+] + INSTALL_REQUIRES
 
 
 setup(
