@@ -20,7 +20,7 @@ MAINTAINER_EMAIL = "g.lemaitre58@gmail.com"
 URL = "https://github.com/glemaitre/ampute"
 LICENSE = "new BSD"
 DOWNLOAD_URL = "https://github.com/glemaitre/ampute"
-VERSION = __version__
+VERSION = __version__  # noqa: F821
 CLASSIFIERS = [
     "Intended Audience :: Science/Research",
     "Intended Audience :: Developers",
@@ -41,6 +41,7 @@ CLASSIFIERS = [
 INSTALL_REQUIRES = [
     "numpy>=1.13.3",
     "scipy>=0.19.1",
+    "scikit-learn>=1.0",
 ]
 EXTRAS_REQUIRE = {
     "dev": [
