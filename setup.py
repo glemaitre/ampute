@@ -44,7 +44,7 @@ INSTALL_REQUIRES = [
 ]
 EXTRAS_REQUIRE = {
     "dev": [
-        "black",
+        "black==21.6b0",
         "flake8",
     ],
     "tests": [
