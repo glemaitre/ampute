@@ -10,11 +10,31 @@ from ampute import UnivariateAmputer
         ({"strategy": "random"}, ValueError, "The strategy 'random' is not supported."),
         ({"subset": [2.5, 3.5]}, TypeError, "All entry in `subset` should all be"),
         ({"subset": ["a", "b"]}, TypeError, "Passing a list of strings in `subset`"),
+        (
+            {"ratio_missingness": np.complex64(1)},
+            TypeError,
+            "ratio_missingness must be an instance of",
+        ),
+        (
+            {"ratio_missingness": 1.5},
+            ValueError,
+            "ratio_missingness == 1.5, must be < 1.0.",
+        ),
+        (
+            {"ratio_missingness": [0.5]},
+            ValueError,
+            "The length of `ratio_missingness` should be equal",
+        ),
+        (
+            {"ratio_missingness": [1.5, 1.5]},
+            ValueError,
+            "ratio_missingness == 1.5, must be < 1.0.",
+        ),
     ],
 )
 def test_univariate_amputer_validation_parameters(params, err_type, err_msg):
     rng = np.random.RandomState(42)
-    X = rng.rand(10, 10)
+    X = rng.rand(10, 2)
 
     with pytest.raises(err_type, match=err_msg):
         UnivariateAmputer(**params).fit_transform(X)

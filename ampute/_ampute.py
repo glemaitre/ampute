@@ -1,10 +1,11 @@
-from numbers import Integral
+from collections.abc import Iterable
+from numbers import Integral, Real
 
 import numpy as np
 from scipy import sparse
 
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.utils import check_array
+from sklearn.utils import check_array, check_scalar
 
 
 class UnivariateAmputer(TransformerMixin, BaseEstimator):
@@ -34,7 +35,8 @@ class UnivariateAmputer(TransformerMixin, BaseEstimator):
         is provided for `subset`.
 
     copy : bool, default=True
-        Whether to perform the amputation inplace or to trigger a copy.
+        Whether to perform the amputation inplace or to trigger a copy. The
+        default will trigger a copy.
 
     Attributes
     ----------
@@ -109,5 +111,37 @@ class UnivariateAmputer(TransformerMixin, BaseEstimator):
             )
         else:
             self.amputated_features_indices_ = np.arange(n_features, dtype=np.int64)
+
+        if isinstance(self.ratio_missingness, Iterable):
+            if len(self.ratio_missingness) != len(self.amputated_features_indices_):
+                raise ValueError(
+                    "The length of `ratio_missingness` should be equal to the "
+                    f"length of `subset`. Pass an array-like with {n_features} "
+                    "elements."
+                )
+            ratio_missingness = np.asarray(self.ratio_missingness, dtype=np.float64)
+            for ratio in ratio_missingness:
+                check_scalar(
+                    ratio,
+                    "ratio_missingness",
+                    Real,
+                    min_val=0.0,
+                    max_val=1.0,
+                    include_boundaries="neither",
+                )
+        else:
+            check_scalar(
+                self.ratio_missingness,
+                "ratio_missingness",
+                Real,
+                min_val=0.0,
+                max_val=1.0,
+                include_boundaries="neither",
+            )
+            ratio_missingness = np.full_like(
+                self.amputated_features_indices_,
+                fill_value=self.ratio_missingness,
+                dtype=np.float64,
+            )
 
         return X
