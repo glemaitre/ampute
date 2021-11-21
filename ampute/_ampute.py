@@ -31,9 +31,7 @@ class UnivariateAmputer(TransformerMixin, BaseEstimator):
         Whether to perform the amputation inplace or to trigger a copy.
     """
 
-    def __init__(
-        self, strategy="mcar", subset=None, ratio_missingness=0.5, copy=True
-    ):
+    def __init__(self, strategy="mcar", subset=None, ratio_missingness=0.5, copy=True):
         self.strategy = strategy
         self.subset = subset
         self.ratio_missingness = ratio_missingness
