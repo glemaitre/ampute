@@ -1,12 +1,15 @@
 .. -*- mode: rst -*-
 
-|Continuous integration|_ |Codecov|_ |Black|_
+|Continuous integration|_ |Codecov|_ |Documentation|_ |Black|_
 
 .. |Continuous integration| image:: https://github.com/glemaitre/ampute/actions/workflows/ci.yml/badge.svg?branch=main
 .. _`Continuous integration`: https://github.com/glemaitre/ampute/actions/workflows/ci.yml
 
 .. |Codecov| image:: https://codecov.io/gh/glemaitre/ampute/branch/main/graph/badge.svg?token=nnKm1BeGD3
 .. _Codecov: https://codecov.io/gh/glemaitre/ampute
+
+.. |Documentation| image:: https://readthedocs.org/projects/ampute/badge/?version=latest
+.. _Documentation: https://ampute.readthedocs.io/en/latest/?badge=latest
 
 .. |Black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
 .. _Black: https://github.com/psf/black
