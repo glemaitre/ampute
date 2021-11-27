@@ -1,0 +1,8 @@
+scikit-learn
+pandas
+seaborn
+sphinx
+sphinx-gallery
+pydata-sphinx-theme
+numpydoc
+memory_profiler

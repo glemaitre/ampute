@@ -56,11 +56,11 @@ EXTRAS_REQUIRE = {
         "sphinx",
         "sphinx-gallery",
         "pydata-sphinx-theme",
-        "sphinxcontrib-bibtex",
         "numpydoc",
         "matplotlib",
         "pandas",
         "seaborn",
+        "memory_profiler",
     ],
 }
 EXTRAS_REQUIRE["all"] = [
