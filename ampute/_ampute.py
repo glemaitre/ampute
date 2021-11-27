@@ -71,8 +71,7 @@ class UnivariateAmputer(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        X_amputed : {array-like, sparse matrix, dataframe} of shape \
-                (n_samples, n_features)
+        X_amputed : {ndarray, sparse matrix, dataframe} of shape (n_samples, n_features)
             The dataset with missing values.
         """
         is_dataframe = False
