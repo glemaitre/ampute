@@ -10,7 +10,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        # Add Python 3.10 when wheels for all dependencies will be available
+        python-version: ["3.7", "3.8", "3.9"]  # , "3.10"]
 
     steps:
     - uses: actions/checkout@v2
