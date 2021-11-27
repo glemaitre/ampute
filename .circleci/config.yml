@@ -1,0 +1,36 @@
+version: 2
+
+jobs:
+  documentation:
+    docker:
+      - image: circleci/python:3.7.7-buster
+    environment:
+      - CONDA_ENV_NAME: doc_env
+      - OMP_NUM_THREADS: 1
+      - MKL_NUM_THREADS: 2
+      - OPENBLAS_NUM_THREADS: 2
+    steps:
+      - checkout
+      - run: ./.circleci/checkout_merge_commit.sh
+      - run: ./.circleci/build_doc.sh
+      - store_artifacts:
+          path: doc/_build/html
+          destination: doc
+      - store_artifacts:
+          path: ~/log.txt
+      - persist_to_workspace:
+          root: doc/_build/html
+          paths: .
+      - attach_workspace:
+          at: doc/_build/html
+      - run: ls -ltrh doc/_build/html
+    filters:
+      branches:
+        ignore: main
+
+
+workflows:
+  version: 2
+  documentation:
+    jobs:
+      - documentation
