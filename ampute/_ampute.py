@@ -76,9 +76,8 @@ class UnivariateAmputer(TransformerMixin, BaseEstimator):
         """
         is_dataframe = False
         if not (hasattr(X, "__array__") or sparse.issparse(X)):
-            X = check_array(
-                X, force_all_finite="allow-nan", copy=self.copy, dtype=object
-            )
+            # array-like
+            X = check_array(X, force_all_finite="allow-nan", copy=self.copy, dtype=None)
         elif hasattr(X, "loc"):
             is_dataframe = True
 

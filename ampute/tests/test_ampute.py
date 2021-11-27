@@ -56,7 +56,7 @@ def test_univariate_amputer_unknown_feature_names():
         UnivariateAmputer(subset=["xxx"]).fit_transform(X)
 
 
-@pytest.mark.parametrize("X_type", ["array", "sparse", "dataframe"])
+@pytest.mark.parametrize("X_type", ["array", "sparse", "dataframe", "list"])
 @pytest.mark.parametrize("copy", [False, True])
 def test_univariate_amputer_subset(X_type, copy):
     """Check that subset is selected a subset of features to amputate."""
@@ -86,7 +86,7 @@ def test_univariate_amputer_subset(X_type, copy):
             assert n_missing == 0
 
 
-@pytest.mark.parametrize("X_type", ["array", "sparse", "dataframe"])
+@pytest.mark.parametrize("X_type", ["array", "sparse", "dataframe", "list"])
 @pytest.mark.parametrize("ratio_missingness", [0.5, [0.2, 0.3, 0.4, 0.5, 0.6]])
 @pytest.mark.parametrize("copy", [False, True])
 def test_univariate_amputer_mcar(X_type, ratio_missingness, copy):
@@ -138,3 +138,27 @@ def test_univariate_amputer_copy(X_type, copy):
         assert X is X_amputed
     else:
         assert not (X is X_amputed)
+
+
+@pytest.mark.parametrize(
+    "X_type, X_amputed_type",
+    [
+        ("list", "ndarray"),
+        ("array", "ndarray"),
+        ("sparse", "csr_matrix"),
+        ("dataframe", "DataFrame"),
+    ],
+)
+def test_univariate_amputer_output_type(X_type, X_amputed_type):
+    """Check the output type once amputed."""
+    rng = np.random.RandomState(0)
+    n_samples, n_features = 10_000, 5
+    column_names = [f"Column {i}" for i in range(n_features)]
+
+    X = rng.randn(n_samples, n_features)
+    X = _convert_container(X, X_type, columns_name=column_names)
+
+    amputer = UnivariateAmputer(strategy="mcar")
+    X_amputed = amputer.fit_transform(X)
+
+    assert type(X_amputed).__name__ == X_amputed_type
