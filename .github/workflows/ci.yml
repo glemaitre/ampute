@@ -27,7 +27,7 @@ jobs:
         black --check --diff .
     - name: Test with pytest
       run: |
-        pytest -vsl --cov=./ --cov-report=xml --cov-report=term ampute
+        pytest -vsl --cov-report=xml --cov-report=term --cov ampute
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v2
       with:
