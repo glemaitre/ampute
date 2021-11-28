@@ -11,6 +11,13 @@ manner.
 # License: BSD 3 clause
 
 # %%
+import sklearn
+import seaborn as sns
+
+sklearn.set_config(display="diagram")
+sns.set_context("poster")
+
+# %%
 import pandas as pd
 from sklearn.datasets import make_classification
 
@@ -34,12 +41,17 @@ amputer = UnivariateAmputer(
     subset=features_with_missing_values,
     ratio_missingness=[0.2, 0.3, 0.4],
 )
-X_missing = amputer(X)
-X_missing
 
 # %%
+X_missing = amputer(X)
+X_missing.head()
+
+# %%
+import matplotlib.pyplot as plt
+
 ax = X_missing[features_with_missing_values].isna().mean().plot.barh()
-_ = ax.set_title("Proportion of missing values")
+ax.set_title("Proportion of missing values")
+plt.tight_layout()
 
 # %%
 from sklearn.impute import SimpleImputer
@@ -55,7 +67,9 @@ model = make_pipeline(
     SimpleImputer(strategy="mean"),
     LogisticRegression(),
 )
+model
 
+# %%
 n_folds = 100
 cv = ShuffleSplit(n_splits=n_folds, random_state=42)
 results = pd.Series(
@@ -67,4 +81,5 @@ results = pd.Series(
 ax = results.plot.hist()
 ax.set_xlim([0, 1])
 ax.set_xlabel("Accuracy")
-_ = ax.set_title("Cross-validation scores")
+ax.set_title("Cross-validation scores")
+plt.tight_layout()
