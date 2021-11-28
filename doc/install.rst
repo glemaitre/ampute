@@ -10,8 +10,8 @@ Prerequisites
 The `ampute` package requires the following dependencies:
 
 * python (>=3.7)
-* numpy (>=1.13.3)
-* scipy (>=0.19.1)
+* numpy (>=1.17.5)
+* scipy (>=1.0.1)
 * scikit-learn (>=1.0)
 
 Install

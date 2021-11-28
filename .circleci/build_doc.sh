@@ -74,6 +74,13 @@ fi
 
 MAKE_TARGET=html
 
+
+# Installing required system packages to support the rendering of math
+# notation in the HTML documentation and to optimize the image files
+sudo -E apt-get -yq update --allow-releaseinfo-change
+sudo -E apt-get -yq --no-install-suggests --no-install-recommends \
+    install dvipng gsfonts ccache zip optipng
+
 # deactivate circleci virtualenv and setup a miniconda env instead
 if [[ `type -t deactivate` ]]; then
     deactivate

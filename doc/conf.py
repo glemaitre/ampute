@@ -73,8 +73,16 @@ pygments_style = "sphinx"
 
 # -- Options for math equations -----------------------------------------------
 
-extensions.append("sphinx.ext.imgmath")
 imgmath_image_format = "svg"
+# For maths, use mathjax by default and svg if NO_MATHJAX env variable is set
+# (useful for viewing the doc offline)
+if os.environ.get("NO_MATHJAX"):
+    extensions.append("sphinx.ext.imgmath")
+    imgmath_image_format = "svg"
+    mathjax_path = ""
+else:
+    extensions.append("sphinx.ext.mathjax")
+    mathjax_path = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"
 
 # -- Options for HTML output ----------------------------------------------
 
@@ -155,7 +163,7 @@ plot_gallery = True
 sphinx_gallery_conf = {
     "doc_module": "ampute",
     "backreferences_dir": os.path.join("references/generated"),
-    "show_memory": True,
+    # "show_memory": True,
     "reference_url": {"ampute": None},
 }
 
