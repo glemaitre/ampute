@@ -163,7 +163,7 @@ plot_gallery = True
 sphinx_gallery_conf = {
     "doc_module": "ampute",
     "backreferences_dir": os.path.join("references/generated"),
-    "show_memory": True,
+    # "show_memory": True,
     "reference_url": {"ampute": None},
 }
 
