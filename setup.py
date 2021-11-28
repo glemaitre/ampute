@@ -39,8 +39,8 @@ CLASSIFIERS = [
     "Programming Language :: Python :: 3.10",
 ]
 INSTALL_REQUIRES = [
-    "numpy>=1.13.3",
-    "scipy>=0.19.1",
+    "numpy>=1.17.5",
+    "scipy>=1.0.1",
     "scikit-learn>=1.0",
 ]
 EXTRAS_REQUIRE = {

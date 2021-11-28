@@ -28,8 +28,8 @@ Dependencies
 
 `ampute` requires the following Python packages:
 
-- `numpy` >= 1.13.3
-- `scipy`>= 0.19.1
+- `numpy` >= 1.17.5
+- `scipy`>= 1.0.1
 - `scikit-learn` >=1.0
 
 The examples in the documentation require `pandas`, `matplotlib`, and
