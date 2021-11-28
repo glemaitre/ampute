@@ -6,6 +6,7 @@ from scipy import sparse
 
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import check_array, check_random_state, check_scalar
+from sklearn.utils.validation import _num_features, _num_samples
 
 
 class UnivariateAmputer(TransformerMixin, BaseEstimator):
@@ -42,6 +43,38 @@ class UnivariateAmputer(TransformerMixin, BaseEstimator):
     ----------
     amputated_features_indices_ : ndarray of shape (n_selected_features,)
         The indices of the features that have been amputated.
+
+    Examples
+    --------
+    >>> from numpy.random import default_rng
+    >>> rng = default_rng(0)
+    >>> n_samples, n_features = 5, 3
+    >>> X = rng.normal(size=(n_samples, n_features))
+
+    One can amputate values using the common transformer `scikit-learn` API:
+
+    >>> amputer = UnivariateAmputer(random_state=42)
+    >>> amputer.fit_transform(X)
+    array([[ 0.12573022, -0.13210486,  0.64042265],
+           [        nan, -0.53566937,         nan],
+           [        nan,         nan,         nan],
+           [        nan,         nan,  0.04132598],
+           [-2.32503077,         nan, -1.24591095]])
+
+    The amputer can be used in a scikit-learn :class:`~sklearn.pipeline.Pipeline`.
+
+    >>> from sklearn.impute import SimpleImputer
+    >>> from sklearn.pipeline import make_pipeline
+    >>> pipeline = make_pipeline(
+    ...     UnivariateAmputer(random_state=42),
+    ...     SimpleImputer(strategy="mean"),
+    ... )
+    >>> pipeline.fit_transform(X)
+    array([[ 0.12573022, -0.13210486,  0.64042265],
+           [-1.09965028, -0.53566937, -0.18805411],
+           [-1.09965028, -0.33388712, -0.18805411],
+           [-1.09965028, -0.33388712,  0.04132598],
+           [-2.32503077, -0.33388712, -1.24591095]])
     """
 
     def __init__(
@@ -58,8 +91,8 @@ class UnivariateAmputer(TransformerMixin, BaseEstimator):
         self.copy = copy
         self.random_state = random_state
 
-    def fit_transform(self, X, y=None):
-        """Amputate the dataset `X` with missing values.
+    def fit(self, X, y=None):
+        """Validation of the parameters of amputer.
 
         Parameters
         ----------
@@ -71,20 +104,10 @@ class UnivariateAmputer(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        X_amputed : {ndarray, sparse matrix, dataframe} of shape (n_samples, n_features)
-            The dataset with missing values.
+        self
+            The validated amputer.
         """
-        is_dataframe = False
-        if not (hasattr(X, "__array__") or sparse.issparse(X)):
-            # array-like
-            X = check_array(X, force_all_finite="allow-nan", copy=self.copy, dtype=None)
-        elif hasattr(X, "loc"):
-            is_dataframe = True
-
-        if self.copy:
-            X = X.copy()
-
-        n_samples, n_features = X.shape
+        n_features = _num_features(X)
 
         supported_strategies = ["mcar"]
         if self.strategy not in supported_strategies:
@@ -116,7 +139,7 @@ class UnivariateAmputer(TransformerMixin, BaseEstimator):
                 )
 
         if self.subset is not None:
-            feature_names = X.columns.tolist() if is_dataframe else None
+            feature_names = X.columns.tolist() if hasattr(X, "columns") else None
             self.amputated_features_indices_ = np.array(
                 [
                     convert_feature(fx, feature_names=feature_names)
@@ -134,8 +157,10 @@ class UnivariateAmputer(TransformerMixin, BaseEstimator):
                     f"length of `subset`. Pass an array-like with {n_features} "
                     "elements."
                 )
-            ratio_missingness = np.asarray(self.ratio_missingness, dtype=np.float64)
-            for ratio in ratio_missingness:
+            self._ratio_missingness = np.asarray(
+                self.ratio_missingness, dtype=np.float64
+            )
+            for ratio in self._ratio_missingness:
                 check_scalar(
                     ratio,
                     "ratio_missingness",
@@ -153,17 +178,47 @@ class UnivariateAmputer(TransformerMixin, BaseEstimator):
                 max_val=1.0,
                 include_boundaries="neither",
             )
-            ratio_missingness = np.full_like(
+            self._ratio_missingness = np.full_like(
                 self.amputated_features_indices_,
                 fill_value=self.ratio_missingness,
                 dtype=np.float64,
             )
 
+        return self
+
+    def transform(self, X, y=None):
+        """Amputate the dataset `X` with missing values.
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix, dataframe} of shape (n_samples, n_features)
+            The dataset to be amputated.
+
+        y : Ignored
+            Present to follow the scikit-learn API.
+
+        Returns
+        -------
+        X_amputed : {ndarray, sparse matrix, dataframe} of shape (n_samples, n_features)
+            The dataset with missing values.
+        """
+        n_samples = _num_samples(X)
+
+        is_dataframe = False
+        if not (hasattr(X, "__array__") or sparse.issparse(X)):
+            # array-like
+            X = check_array(X, force_all_finite="allow-nan", copy=self.copy, dtype=None)
+        elif hasattr(X, "loc"):
+            is_dataframe = True
+
+        if self.copy:
+            X = X.copy()
+
         random_state = check_random_state(self.random_state)
 
         if self.strategy == "mcar":
             for ratio, feature_idx in zip(
-                ratio_missingness, self.amputated_features_indices_
+                self._ratio_missingness, self.amputated_features_indices_
             ):
                 mask_missing_values = random_state.choice(
                     [False, True], size=n_samples, p=[1 - ratio, ratio]
@@ -174,3 +229,39 @@ class UnivariateAmputer(TransformerMixin, BaseEstimator):
                     X[mask_missing_values, feature_idx] = np.nan
 
         return X
+
+    def __call__(self, X):
+        """Callable that is a shorthand for calling `fit_transform`.
+
+        This callable is useful if you don't want to integrate the transformer
+        into a pipeline and impute directly a dataset.
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix, dataframe} of shape (n_samples, n_features)
+            The dataset to be amputated.
+
+        Returns
+        -------
+        X_amputed : {ndarray, sparse matrix, dataframe} of shape (n_samples, n_features)
+            The dataset with missing values.
+
+        Examples
+        --------
+        >>> from numpy.random import default_rng
+        >>> rng = default_rng(0)
+        >>> n_samples, n_features = 5, 3
+        >>> X = rng.normal(size=(n_samples, n_features))
+
+        You can use the class as a callable if you don't need to use a
+        :class:`sklearn.pipeline.Pipeline`:
+
+        >>> from ampute import UnivariateAmputer
+        >>> UnivariateAmputer(random_state=42)(X)
+        array([[ 0.12573022, -0.13210486,  0.64042265],
+           [        nan, -0.53566937,         nan],
+           [        nan,         nan,         nan],
+           [        nan,         nan,  0.04132598],
+           [-2.32503077,         nan, -1.24591095]])
+        """
+        return self.fit_transform(X)

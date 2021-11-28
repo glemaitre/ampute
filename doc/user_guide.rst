@@ -89,6 +89,9 @@ However, with the presence of missing values, we cannot use this approach::
 does not accept missing values. Thus, one needs to a strategy to deal with
 missing values.
 
+In the following section, we describe what are the missingness mechanisms used
+in the literature to simulate the presence of missing values in a dataset.
+
 Missingness mechanisms
 ----------------------
 
@@ -96,3 +99,22 @@ In the literature, there are three reported mechanism to control the
 missingness of a dataset: missing completely at random (MCAR), missing
 at random (MAR), and missing not at random (MNAR). We will give a brief
 description of each of them.
+
+MCAR strategy is straightforward. For a given feature, missing values are
+created at random. Let's imagine the first feature in :math:`X` contains
+missing values. MCAR strategy is be equivalent to::
+
+    >>> X_missing_mcar = X.copy()
+    >>> missing_values_indices = rng.choice(
+    ...    n_samples, size=n_samples // 2, replace=False
+    ... )
+    >>> X_missing_mcar[missing_values_indices, 0] = np.nan
+    >>> X_missing_mcar
+    array([[ 0.12573022, -0.13210486,  0.64042265],
+           [ 0.10490012, -0.53566937,  0.36159505],
+           [        nan,  0.94708096, -0.70373524],
+           [        nan, -0.62327446,  0.04132598],
+           [-2.32503077, -0.21879166, -1.24591095]])
+
+Here, there is not link between the missing values and the features in
+:math:`X`.
