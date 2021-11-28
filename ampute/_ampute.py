@@ -24,13 +24,18 @@ class UnivariateAmputer(TransformerMixin, BaseEstimator):
           the missing values are amputated for a feature without any dependency
           with other features.
 
-    subset : list of {int, str}, default=None
-        The subset of the features to be amputated. If None, all features are
-        amputated.
+    subset : list of {int, str}, int or float, default=None
+        The subset of the features to be amputated. The possible choices are:
+
+        - `None`: all features are amputated.
+        - `list of {int, str}`: the indices or names of the features to be
+          amputated.
+        - `float`: the ratio of features to be amputated.
+        - `int`: the number of features to be amputated.
 
     ratio_missingness : float or array-like, default=0.5
         The ratio representing the amount of missing data to be generated.
-        If a float, all features to be imputed will have the same ratio.
+        If a `float`, all features to be imputed will have the same ratio.
         If an array-like, the ratio of missingness for each feature will be
         drawn from the array. It should be consistent with `subset` when a list
         is provided for `subset`.
@@ -119,6 +124,7 @@ class UnivariateAmputer(TransformerMixin, BaseEstimator):
             The validated amputer.
         """
         n_features = _num_features(X)
+        random_state = check_random_state(self.random_state)
 
         supported_strategies = ["mcar"]
         if self.strategy not in supported_strategies:
@@ -149,7 +155,7 @@ class UnivariateAmputer(TransformerMixin, BaseEstimator):
                     "All entry in `subset` should all be strings or integers."
                 )
 
-        if self.subset is not None:
+        if isinstance(self.subset, Iterable):
             feature_names = X.columns.tolist() if hasattr(X, "columns") else None
             self.amputated_features_indices_ = np.array(
                 [
@@ -158,7 +164,36 @@ class UnivariateAmputer(TransformerMixin, BaseEstimator):
                 ],
                 dtype=np.int64,
             )
-        else:
+        elif isinstance(self.subset, Real):
+            if isinstance(self.subset, Integral):
+                n_features_to_amputate = check_scalar(
+                    self.subset,
+                    "subset",
+                    Integral,
+                    min_val=1,
+                    max_val=n_features,
+                    include_boundaries="both",
+                )
+            else:
+                subset = check_scalar(
+                    self.subset,
+                    "subset",
+                    Real,
+                    min_val=0,
+                    max_val=1,
+                    include_boundaries="neither",
+                )
+                n_features_to_amputate = int(subset * n_features)
+                if n_features_to_amputate < 1:
+                    raise ValueError(
+                        "The number of features to amputate must be at least 1. "
+                        "Increase the value of `subset` that corresponds to the "
+                        "ratio of number of features containing missing values."
+                    )
+            self.amputated_features_indices_ = random_state.choice(
+                n_features, size=n_features_to_amputate, replace=False
+            ).astype(np.int64)
+        else:  # self.subset is None
             self.amputated_features_indices_ = np.arange(n_features, dtype=np.int64)
 
         if isinstance(self.ratio_missingness, Iterable):
