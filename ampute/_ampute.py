@@ -75,6 +75,17 @@ class UnivariateAmputer(TransformerMixin, BaseEstimator):
            [-1.09965028, -0.33388712, -0.18805411],
            [-1.09965028, -0.33388712,  0.04132598],
            [-2.32503077, -0.33388712, -1.24591095]])
+
+    You can use the class as a callable if you don't need to use a
+    :class:`sklearn.pipeline.Pipeline`:
+
+    >>> from ampute import UnivariateAmputer
+    >>> UnivariateAmputer(random_state=42)(X)
+    array([[ 0.12573022, -0.13210486,  0.64042265],
+        [        nan, -0.53566937,         nan],
+        [        nan,         nan,         nan],
+        [        nan,         nan,  0.04132598],
+        [-2.32503077,         nan, -1.24591095]])
     """
 
     def __init__(
