@@ -12,6 +12,15 @@ from ampute import UnivariateAmputer
         ({"strategy": "random"}, ValueError, "The strategy 'random' is not supported."),
         ({"subset": [2.5, 3.5]}, TypeError, "All entry in `subset` should all be"),
         ({"subset": ["a", "b"]}, TypeError, "Passing a list of strings in `subset`"),
+        ({"subset": -0.1}, ValueError, "subset == -0.1, must be > 0"),
+        (
+            {"subset": 0.05},
+            ValueError,
+            "The number of features to amputate must be at least 1.",
+        ),
+        ({"subset": 1.5}, ValueError, "subset == 1.5, must be < 1."),
+        ({"subset": -10}, ValueError, "subset == -10, must be >= 1."),
+        ({"subset": 10}, ValueError, "subset == 10, must be <= 2."),
         (
             {"ratio_missingness": np.complex64(1)},
             TypeError,
@@ -58,7 +67,7 @@ def test_univariate_amputer_unknown_feature_names():
 
 @pytest.mark.parametrize("X_type", ["array", "sparse", "dataframe", "list"])
 @pytest.mark.parametrize("copy", [False, True])
-def test_univariate_amputer_subset(X_type, copy):
+def test_univariate_amputer_subset_list(X_type, copy):
     """Check that subset is selected a subset of features to amputate."""
     rng = np.random.RandomState(0)
     n_samples, n_features = 10_000, 5
@@ -84,6 +93,33 @@ def test_univariate_amputer_subset(X_type, copy):
             assert abs(n_missing / n_samples - 0.5) < 0.04
         else:
             assert n_missing == 0
+
+
+@pytest.mark.parametrize("X_type", ["array", "sparse", "dataframe", "list"])
+@pytest.mark.parametrize("copy", [False, True])
+@pytest.mark.parametrize("subset", [0.5, 3])
+def test_univariate_amputer_subset_scalar(X_type, copy, subset):
+    """Check that subset is selected a subset of features to amputate."""
+    rng = np.random.RandomState(0)
+    n_samples, n_features = 10_000, 6
+    column_names = np.array([f"Column {i}" for i in range(n_features)], dtype=object)
+
+    X = rng.randn(n_samples, n_features)
+    X = _convert_container(X, X_type, columns_name=column_names)
+
+    amputer = UnivariateAmputer(strategy="mcar", subset=subset, copy=copy)
+    X_amputated = amputer.fit_transform(X)
+
+    if X_type == "sparse":
+        X_amputated = X_amputated.toarray()
+    else:
+        X_amputated = np.asarray(X_amputated)
+
+    n_features_with_missing = (
+        np.array([np.sum(np.isnan(X_amputated[:, i])) for i in range(n_features)]) > 0
+    )
+    assert n_features_with_missing.sum() == n_features // 2
+    assert len(amputer.amputated_features_indices_) == n_features // 2
 
 
 @pytest.mark.parametrize("X_type", ["array", "sparse", "dataframe", "list"])
