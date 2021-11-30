@@ -18,3 +18,14 @@ Univariate amputation
    :template: class.rst
 
    UnivariateAmputer
+
+.. _models:
+
+Models
+------
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+
+   RandomLogisticRegression
