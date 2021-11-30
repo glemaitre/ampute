@@ -32,6 +32,25 @@ def test_random_logistic_regression():
     assert model.predict_proba(X)[:, 1].mean() == pytest.approx(mean_probabilities)
 
 
+def test_random_logistic_regression_multiclass():
+    n_samples, n_features = 100, 10
+    X, y = make_classification(
+        n_samples=n_samples,
+        n_features=n_features,
+        n_classes=3,
+        n_clusters_per_class=1,
+        random_state=0,
+    )
+
+    model = RandomLogisticRegression(random_state=0)
+    err_msg = (
+        "RandomLogisticRegression only supports binary targets. Got type 'multiclass' "
+        "instead."
+    )
+    with pytest.raises(ValueError, match=err_msg):
+        model.fit(X, y)
+
+
 @parametrize_with_checks([RandomLogisticRegression(random_state=0)])
 def test_sklearn_compatible_estimator(estimator, check):
     check(estimator)
